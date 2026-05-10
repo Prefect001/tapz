@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "762424845985",
+    "project_id": "carpark-df96f",
+    "storage_bucket": "carpark-df96f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762424845985:android:d4886dc7589b58369fb2e0",
+        "android_client_info": {
+          "package_name": "com.carpark.paydashboard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPvxHK5_4jJVAuIYOaqcAA8pDk7NtyvP0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762424845985:android:7bec8fea9e4efc419fb2e0",
+        "android_client_info": {
+          "package_name": "com.carpark.scanpay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPvxHK5_4jJVAuIYOaqcAA8pDk7NtyvP0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

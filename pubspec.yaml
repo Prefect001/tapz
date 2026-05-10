@@ -1,0 +1,76 @@
+name: tapz
+description: "A Flutter app for ScanPay functionality with QR code scanning and payments."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.7.2 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  
+  # Firebase Dependencies
+  firebase_core: ^4.1.0
+  firebase_auth: ^6.0.2
+  cloud_firestore: ^6.0.1
+  firebase_ui_auth: ^3.0.0
+  cloud_functions: ^6.0.1
+  
+  
+  # Camera & QR Scanning
+  camera: ^0.11.2
+  mobile_scanner: ^7.0.1
+  
+  # Database & Storage
+  sqflite: ^2.2.0+3
+  shared_preferences: ^2.0.15
+  json_annotation: ^4.8.0
+  
+  # Maps & Location
+  google_maps_flutter: ^2.2.1
+  geolocator: ^14.0.2
+  
+  # Web & Payment
+  webview_flutter: ^4.0.2
+  flutter_inappwebview: ^6.1.5
+  
+  qr_flutter: ^4.0.0
+  
+  # UI Components
+  
+  cached_network_image: ^3.2.3
+  connectivity_plus: ^6.1.5
+  
+  # Utilities
+  url_launcher: ^6.1.7
+  intl: ^0.19.0
+  http: ^1.5.0
+  provider: ^6.1.1
+  carousel_slider: ^5.1.1
+  pin_code_fields: ^8.0.1
+  printing: ^5.14.2
+  pdf: ^3.11.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  # assets:
+  #  - assets/images/
+
+  
+
+  # Google Maps API key configuration (for Android)
+  # Add this to your android/app/src/main/AndroidManifest.xml
+  # <meta-data android:name="com.google.android.geo.API_KEY"
+  #            android:value="YOUR_API_KEY_HERE"/>
+  
+  # For iOS, add API key to iOS/Runner/AppDelegate.swift
