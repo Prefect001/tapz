@@ -106,7 +106,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 _label('City'),
                 _field(_cityCtrl, enabled: _editMode),
                 const SizedBox(height: 16),
-                _label('Pincode'),
+                _label('Zipcode'),
                 _field(_zipcodeCtrl,
                     enabled: _editMode,
                     type: TextInputType.number),

@@ -32,6 +32,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   late final String _orderId;
   bool _isLoading = false;
   bool _saveCard = false;
+  bool _doubleTheTip = false;
   bool _tokenizationRequested = false;
   int _initialCardCount = 0;
   bool _isCheckingCards = false;
@@ -53,6 +54,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   String? get _uid => FirebaseAuth.instance.currentUser?.uid;
+
+  String get _effectiveTipAmountString =>
+      _doubleTheTip ? Constants.doubleTipAmountString : Constants.tipAmountString;
 
   // ── mirrors checkForSavedCards() ──────────────────────────────────────────
 
@@ -138,7 +142,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setState(() => _isLoading = true);
 
     final result = await CloudFunctionsService.initiatePayfastPayment(
-      amount: Constants.tipAmountString,
+      amount: _effectiveTipAmountString,
       orderId: _orderId,
       email: email,
       name: name,
@@ -185,7 +189,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setState(() => _isLoading = true);
 
     final result = await CloudFunctionsService.processSavedCardPayment(
-      amount: Constants.tipAmountString,
+      amount: _effectiveTipAmountString,
       orderId: _orderId,
       email: email,
       name: name,
@@ -324,7 +328,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(
+              16, 16, 16,
+              16 + MediaQuery.paddingOf(context).bottom,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -343,7 +350,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             'Quantity:', '${widget.totalQuantity}'),
                         const SizedBox(height: 8),
                         _summaryRow(
-                            'Amount:', 'R ${Constants.tipAmountString}'),
+                            'Amount:', 'R $_effectiveTipAmountString'),
                         const SizedBox(height: 8),
                         _summaryRow('Date:', now),
                       ],
@@ -352,7 +359,27 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // ── Saved Cards Section ──────────────────────────────────
+                // ── Double the Tip ───────────────────────────────────────
+                Card(
+                  elevation: 2,
+                  child: CheckboxListTile(
+                    title: const Text(
+                      'Double the tip (R44)',
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: const Text(
+                      'Show extra appreciation — increase your tip from R22 to R44',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    value: _doubleTheTip,
+                    onChanged: (v) =>
+                        setState(() => _doubleTheTip = v ?? false),
+                    activeColor: Colors.purple,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 4),
+                  ),
+                ),
                 Text(_savedCardsHeader,
                     style: const TextStyle(
                         fontSize: 18,

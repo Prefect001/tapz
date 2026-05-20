@@ -30,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _navigateToMain() {
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const MainScreen()),
@@ -49,15 +50,16 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onScanAndTipPressed() async {
-    // Scan first, then require login at payment
     setState(() => _isProceedingToPayment = true);
 
     final result = await Navigator.push<Map<String, String>>(
       context,
       MaterialPageRoute(
-        builder: (_) => ScanningScreen(isCartActive: false),
+        builder: (_) => const ScanningScreen(isCartActive: false),
       ),
     );
+
+    if (!mounted) return;
 
     if (result != null) {
       final storeId = result['storeId'] ?? '';
@@ -79,8 +81,11 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Callback invoked by PhoneLoginScreen once both OTP + phone screens
+  /// have been popped. At this point LoginScreen is back on top.
   void _handleLoginSuccess(bool profileDone) {
     if (!mounted) return;
+
     if (profileDone) {
       if (_isProceedingToPayment && SharedPrefs.isCartActive) {
         _goToPayment();
@@ -88,6 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _navigateToMain();
       }
     } else {
+      // New user — collect profile details
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const ProfileScreen()),
@@ -96,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _goToPayment() {
-    // Navigate to main and trigger payment
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const MainScreen()),
@@ -104,13 +110,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showLoginRequiredDialog() {
+    if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
         title: const Text('Login Required'),
         content: const Text(
-            'You need to login or create an account to complete the payment. Would you like to login now?'),
+            'You need to login or create an account to complete the payment. '
+            'Would you like to login now?'),
         actions: [
           TextButton(
             onPressed: () {
@@ -142,7 +150,8 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome'), automaticallyImplyLeading: false),
+      appBar: AppBar(
+          title: const Text('Welcome'), automaticallyImplyLeading: false),
       body: Stack(
         children: [
           Center(
@@ -151,7 +160,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo placeholder
                   Container(
                     width: 200,
                     height: 200,
@@ -159,7 +167,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: Colors.blue.shade50,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.local_parking, size: 80, color: Colors.blue),
+                    child: const Icon(Icons.local_parking,
+                        size: 80, color: Colors.blue),
                   ),
                   const SizedBox(height: 24),
                   const Text(
@@ -176,7 +185,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 60),
-                  // Scan & Tip button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -194,7 +202,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Login / Register button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>762424845985-melg1sud23vq4pdnl84ah03im1fkaqvn.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.762424845985-melg1sud23vq4pdnl84ah03im1fkaqvn</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>762424845985-8635l5bgc51jd6nn82knt5qvoi58ms75.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDgEPzNtov5Hj9O2IXNTrtql2Tn87VOG_4</string>
+	<key>GCM_SENDER_ID</key>
+	<string>762424845985</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.xolile.tapzpay</string>
+	<key>PROJECT_ID</key>
+	<string>carpark-df96f</string>
+	<key>STORAGE_BUCKET</key>
+	<string>carpark-df96f.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:762424845985:ios:66f4c65c39133c6e9fb2e0</string>
+</dict>
+</plist>

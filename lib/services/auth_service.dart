@@ -15,19 +15,30 @@ class AuthService {
     required Function(FirebaseAuthException) onVerificationFailed,
     required Function(String) onCodeAutoRetrievalTimeout,
   }) async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await _auth.signInWithCredential(credential);
-        onVerificationCompleted(credential.smsCode ?? '');
-      },
-      verificationFailed: onVerificationFailed,
-      codeSent: (String verificationId, int? resendToken) {
-        onCodeSent(verificationId);
-      },
-      codeAutoRetrievalTimeout: onCodeAutoRetrievalTimeout,
-      timeout: const Duration(seconds: 60),
-    );
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) {
+          // Do NOT call signInWithCredential here — it crashes for test numbers.
+          // Just notify the caller with the sms code if available.
+          onVerificationCompleted(credential.smsCode ?? '');
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          onVerificationFailed(e);
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          onCodeSent(verificationId);
+        },
+        codeAutoRetrievalTimeout: onCodeAutoRetrievalTimeout,
+        timeout: const Duration(seconds: 60),
+      );
+    } catch (e) {
+      // Surface unexpected errors as a FirebaseAuthException so callers
+      // can handle them consistently via onVerificationFailed.
+      onVerificationFailed(
+        FirebaseAuthException(code: 'unknown', message: e.toString()),
+      );
+    }
   }
 
   Future<UserCredential> signInWithOTP({

@@ -19,7 +19,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   final _phoneController = TextEditingController();
   final _authService = AuthService();
   bool _isLoading = false;
-  String _selectedCountryCode = '+27'; // South Africa default
+  String _selectedCountryCode = '+27';
 
   final List<Map<String, String>> _countryCodes = [
     {'code': '+27', 'name': 'South Africa', 'flag': '🇿🇦'},
@@ -43,6 +43,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     await _authService.verifyPhoneNumber(
       phoneNumber: fullNumber,
       onCodeSent: (verificationId) {
+        if (!mounted) return;
         setState(() => _isLoading = false);
         Navigator.push(
           context,
@@ -55,34 +56,63 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           ),
         );
       },
-      onVerificationCompleted: (_) => setState(() => _isLoading = false),
+      onVerificationCompleted: (_) {
+        // Auto-verification (Android only) — just stop the loader.
+        // The OTP screen handles the actual sign-in.
+        if (mounted) setState(() => _isLoading = false);
+      },
       onVerificationFailed: (e) {
+        if (!mounted) return;
         setState(() => _isLoading = false);
         _showSnack('Verification failed: ${e.message}');
       },
-      onCodeAutoRetrievalTimeout: (_) => setState(() => _isLoading = false),
+      onCodeAutoRetrievalTimeout: (_) {
+        if (mounted) setState(() => _isLoading = false);
+      },
     );
   }
 
+  /// Called by OTPVerificationScreen after Firebase signs the user in.
+  ///
+  /// Navigation stack at this point:
+  ///   LoginScreen → PhoneLoginScreen → OTPVerificationScreen  (top)
+  ///
+  /// We pop back to the first route (LoginScreen) in one shot, then
+  /// call the LoginScreen callback after a short delay so it has a
+  /// live context.
   Future<void> _handleVerified(String uid) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    // 1. Save auth state
     await SharedPrefs.setUserData(
       firebaseId: uid,
       mobileNumber: user.phoneNumber ?? '',
       isLoggedIn: true,
     );
 
+    // 2. Check Firestore for existing profile
     final exists = await _authService.checkIfUserExists(uid);
+    final profileDone = exists && SharedPrefs.isProfileDone;
+
+    // Capture callback before any pops — widget tree may change
+    final onSuccess = widget.onLoginSuccess;
+
     if (!mounted) return;
 
-    widget.onLoginSuccess(exists && SharedPrefs.isProfileDone);
-    Navigator.pop(context);
+    // 3. Pop all screens back to LoginScreen (the first route) in one call
+    Navigator.of(context).popUntil((route) => route.isFirst);
+
+    // 4. Wait one frame for the pop to settle, then invoke the callback
+    await Future.delayed(const Duration(milliseconds: 100));
+    onSuccess(profileDone);
   }
 
   void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
+    }
   }
 
   @override
@@ -115,10 +145,12 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           border: Border(
-                              right: BorderSide(color: Colors.grey.shade300)),
+                              right: BorderSide(
+                                  color: Colors.grey.shade300)),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
@@ -126,11 +158,12 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                             items: _countryCodes
                                 .map((c) => DropdownMenuItem(
                                       value: c['code'],
-                                      child: Text('${c['flag']} ${c['code']}'),
+                                      child: Text(
+                                          '${c['flag']} ${c['code']}'),
                                     ))
                                 .toList(),
-                            onChanged: (v) =>
-                                setState(() => _selectedCountryCode = v!),
+                            onChanged: (v) => setState(
+                                () => _selectedCountryCode = v!),
                           ),
                         ),
                       ),
@@ -166,8 +199,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
-                        : const Text('Continue', style: TextStyle(fontSize: 16)),
+                                strokeWidth: 2,
+                                color: Colors.white))
+                        : const Text('Continue',
+                            style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
@@ -176,7 +211,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
           if (_isLoading)
             Container(
                 color: Colors.black45,
-                child: const Center(child: CircularProgressIndicator())),
+                child:
+                    const Center(child: CircularProgressIndicator())),
         ],
       ),
     );

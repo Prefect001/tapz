@@ -215,4 +215,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       );
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _mobileCtrl.dispose();
+    _cityCtrl.dispose();
+    _zipcodeCtrl.dispose();
+    _emailCtrl.dispose();
+    super.dispose();
+  }
 }

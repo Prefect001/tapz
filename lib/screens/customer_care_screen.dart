@@ -21,9 +21,8 @@ class _CustomerCareScreenState extends State<CustomerCareScreen> {
   final List<String> _categories = [
     'General',
     'Payment Issues',
-    'Technical Problems',
-    'Product Quality',
-    'Delivery Issues',
+    'App related',
+    'Merchant Issues',
     'Other',
   ];
   String _selectedCategory = 'General';

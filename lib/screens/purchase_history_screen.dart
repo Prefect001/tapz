@@ -37,7 +37,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('Order ID', order.orderId),
+              _buildDetailRow('Transaction ID', order.orderId),
               _buildDetailRow('Store', order.storeName),
               _buildDetailRow('Date', order.getFormattedDate()),
               _buildDetailRow('Total', 'R${order.totalPrice.toStringAsFixed(2)}'),
@@ -80,7 +80,7 @@ class _PurchaseHistoryScreenState extends State<PurchaseHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Purchase History')),
+      appBar: AppBar(title: Text('Transaction History')),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _orders.isEmpty
