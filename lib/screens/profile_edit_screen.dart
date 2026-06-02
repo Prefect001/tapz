@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../utils/shared_prefs.dart';
@@ -81,6 +82,70 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     );
   }
 
+  Future<void> _deleteAccount() async {
+    // Step 1: Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Text(
+          'This will permanently delete your account and all associated data. '
+          'This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.deleteAccount();
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() => _isLoading = false);
+      if (e.code == 'requires-recent-login') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'For security, please log out and log in again before deleting your account.',
+            ),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.message}')),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting account: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,6 +177,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     type: TextInputType.number),
                 const SizedBox(height: 32),
 
+                // Edit / Update Profile button
                 if (!_editMode)
                   SizedBox(
                     width: double.infinity,
@@ -144,20 +210,42 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   ),
 
                 const SizedBox(height: 16),
+
+                // Logout button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _logout,
+                    onPressed: _isLoading ? null : _logout,
                     style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(25))),
-                    child:
-                        const Text('Logout', style: TextStyle(fontSize: 16)),
+                    child: const Text('Logout',
+                        style: TextStyle(fontSize: 16)),
                   ),
                 ),
+
+                const SizedBox(height: 16),
+
+                // Delete Account button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _deleteAccount,
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25))),
+                    child: const Text('Delete Account',
+                        style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -180,7 +268,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       );
 
   Widget _field(TextEditingController ctrl,
-      {bool enabled = true, TextInputType type = TextInputType.text}) =>
+          {bool enabled = true, TextInputType type = TextInputType.text}) =>
       TextField(
         controller: ctrl,
         enabled: enabled,
@@ -192,4 +280,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       );
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _mobileCtrl.dispose();
+    _cityCtrl.dispose();
+    _zipcodeCtrl.dispose();
+    _emailCtrl.dispose();
+    super.dispose();
+  }
 }

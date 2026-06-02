@@ -93,5 +93,27 @@ class AuthService {
     await _auth.signOut();
   }
 
+  /// Permanently deletes the user's Firestore document, Firebase Auth account,
+  /// and all local SharedPreferences data.
+  ///
+  /// Throws [FirebaseAuthException] with code 'requires-recent-login' if the
+  /// user's session is too old — callers should prompt re-authentication.
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('No authenticated user found');
+
+    // 1. Delete Firestore customer document
+    await _firestore
+        .collection(Constants.baseUsersUrl)
+        .doc(user.uid)
+        .delete();
+
+    // 2. Delete Firebase Auth account (may throw requires-recent-login)
+    await user.delete();
+
+    // 3. Clear all local preferences
+    await SharedPrefs.clear();
+  }
+
   User? getCurrentUser() => _auth.currentUser;
 }
