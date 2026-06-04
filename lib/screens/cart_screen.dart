@@ -281,7 +281,7 @@ class _CartScreenState extends State<CartScreen> {
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 32),
                             child: Text(
-                              "Scan a guard's QR code to start tipping",
+                              "Scan the QR code to start tipping",
                               textAlign: TextAlign.center,
                               style: TextStyle(fontSize: 16),
                             ),
@@ -298,7 +298,7 @@ class _CartScreenState extends State<CartScreen> {
                               );
                               if (result != null) setState(() {});
                             },
-                            child: const Text("Scan Guard's QR Code"),
+                            child: const Text("Scan QR Code"),
                           ),
                         ],
                       )

@@ -53,4 +53,6 @@ class Constants {
   static const String tipAmountString = '22.00';
   static const double doubleTipAmount = 44.00;
   static const String doubleTipAmountString = '44.00';
+  static const double tripleTipAmount = 66.00;
+  static const String tripleTipAmountString = '66.00';
 }

@@ -33,6 +33,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   bool _isLoading = false;
   bool _saveCard = false;
   bool _doubleTheTip = false;
+  bool _tripleTheTip = false;
   bool _tokenizationRequested = false;
   int _initialCardCount = 0;
   bool _isCheckingCards = false;
@@ -55,8 +56,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   String? get _uid => FirebaseAuth.instance.currentUser?.uid;
 
-  String get _effectiveTipAmountString =>
-      _doubleTheTip ? Constants.doubleTipAmountString : Constants.tipAmountString;
+  String get _effectiveTipAmountString {
+    if (_tripleTheTip) return Constants.tripleTipAmountString;
+    if (_doubleTheTip) return Constants.doubleTipAmountString;
+    return Constants.tipAmountString;
+  }
 
   // ── mirrors checkForSavedCards() ──────────────────────────────────────────
 
@@ -373,8 +377,35 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       style: TextStyle(fontSize: 13),
                     ),
                     value: _doubleTheTip,
-                    onChanged: (v) =>
-                        setState(() => _doubleTheTip = v ?? false),
+                    onChanged: (v) => setState(() {
+                      _doubleTheTip = v ?? false;
+                      if (_doubleTheTip) _tripleTheTip = false;
+                    }),
+                    activeColor: Colors.purple,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 4),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // ── Triple the Tip ───────────────────────────────────────
+                Card(
+                  elevation: 2,
+                  child: CheckboxListTile(
+                    title: const Text(
+                      'Triple the tip (R66)',
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: const Text(
+                      'Go above and beyond — increase your tip from R22 to R66',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    value: _tripleTheTip,
+                    onChanged: (v) => setState(() {
+                      _tripleTheTip = v ?? false;
+                      if (_tripleTheTip) _doubleTheTip = false;
+                    }),
                     activeColor: Colors.purple,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 4),

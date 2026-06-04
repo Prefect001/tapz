@@ -76,7 +76,7 @@ class _SearchStoreScreenState extends State<SearchStoreScreen> {
           child: TextField(
             controller: _searchCtrl,
             decoration: InputDecoration(
-              hintText: 'Search car guard',
+              hintText: 'Search',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8)),
@@ -92,7 +92,7 @@ class _SearchStoreScreenState extends State<SearchStoreScreen> {
         else if (_filteredStores.isEmpty)
           const Expanded(
             child: Center(
-              child: Text('No car guards available',
+              child: Text('No service workers available',
                   style: TextStyle(fontSize: 16)),
             ),
           )
