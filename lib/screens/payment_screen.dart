@@ -248,6 +248,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
       'success': true,
       'orderId': _orderId,
       'transactionNumber': txnNumber,
+      // Send back the amount that was ACTUALLY charged (R22/R44/R66),
+      // not a value the caller has to guess or hardcode.
+      'amount': double.tryParse(_effectiveTipAmountString) ?? Constants.tipAmount,
     });
   }
 

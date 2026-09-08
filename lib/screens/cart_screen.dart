@@ -98,14 +98,17 @@ class _CartScreenState extends State<CartScreen> {
     if (result != null && result['success'] == true) {
       final returnedOrderId = result['orderId'] as String? ?? orderId;
       final txnNumber = result['transactionNumber'] as String? ?? '';
-      _processSuccessfulPayment(returnedOrderId, txnNumber);
+      // Use the amount PaymentScreen says it actually charged, falling back
+      // to the base tip only if it's somehow missing.
+      final paidAmount = (result['amount'] as num?)?.toDouble() ?? _totalPrice;
+      _processSuccessfulPayment(returnedOrderId, txnNumber, paidAmount);
     }
   }
 
   // ── mirrors processSuccessfulPayment() ────────────────────────────────────
 
   Future<void> _processSuccessfulPayment(
-      String orderId, String transactionNumber) async {
+      String orderId, String transactionNumber, double paidAmount) async {
     setState(() => _isLoading = true);
 
     final orderRef =
@@ -116,6 +119,9 @@ class _CartScreenState extends State<CartScreen> {
         'status': 'paid',
         'transactionNumber': transactionNumber,
         'paidAt': FieldValue.serverTimestamp(),
+        // Reconcile the placeholder amount written before payment with what
+        // was actually charged once the tip choice is known.
+        'amount': paidAmount,
       });
     } catch (e) {
       setState(() => _isLoading = false);
@@ -127,7 +133,7 @@ class _CartScreenState extends State<CartScreen> {
     final tipItem = ProductItem(
       productId: 'TIP001',
       productName: 'Parking Tip',
-      productPrice: 22.00,
+      productPrice: paidAmount,
       productQuantity: 1,
     );
 
@@ -137,7 +143,7 @@ class _CartScreenState extends State<CartScreen> {
       storeName: _storeName,
       userId: _userFirebaseId,
       totalQuantity: _totalQuantity,
-      totalPrice: _totalPrice,
+      totalPrice: paidAmount,
       items: [tipItem],
       transactionNumber: transactionNumber,
       userName: _userName,
