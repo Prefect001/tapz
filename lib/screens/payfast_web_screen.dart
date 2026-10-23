@@ -16,6 +16,9 @@ class PayfastWebScreen extends StatefulWidget {
 }
 
 class _PayfastWebScreenState extends State<PayfastWebScreen> {
+  // Set to true ONLY if your Cloud Function creates the payment in sandbox.
+  static const bool _useSandbox = false;
+
   InAppWebViewController? _webViewController;
 
   bool _isLoading = true;
@@ -24,53 +27,14 @@ class _PayfastWebScreenState extends State<PayfastWebScreen> {
 
   String _errorMessage = '';
 
-  String get _paymentHtml => '''
-<!DOCTYPE html>
-<html>
-<head>
-<meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<script src='https://www.payfast.co.za/onsite/engine.js'></script>
-</head>
-
-<body>
-<script>
-window.onload = function() {
-  try {
-
-    window.payfast_do_onsite_payment(
-      { uuid: '${widget.paymentToken}' },
-
-      function(result) {
-
-        if (result === true) {
-
-          if (window.flutter_inappwebview) {
-            window.flutter_inappwebview.callHandler(
-              'onPaymentComplete'
-            );
-          }
-
-        } else {
-
-          if (window.flutter_inappwebview) {
-            window.flutter_inappwebview.callHandler(
-              'onPaymentCancelled'
-            );
-          }
-        }
-      }
-    );
-
-  } catch(e) {
-
-    document.body.innerHTML =
-      '<h3 style="color:red;text-align:center;margin-top:40px;">Payment failed to load. Please try again.</h3>';
+  // PayFast hosted payment page, loaded as a normal top-level page
+  // (no iframe, no injected HTML, no JS handlers) so Apple Pay can show.
+  String get _hostedUrl {
+    final host = _useSandbox ? 'sandbox.payfast.co.za' : 'www.payfast.co.za';
+    return 'https://$host/eng/process/payment/${widget.paymentToken}';
   }
-};
-</script>
-</body>
-</html>
-''';
+
+  URLRequest get _hostedRequest => URLRequest(url: WebUri(_hostedUrl));
 
   @override
   Widget build(BuildContext context) {
@@ -88,51 +52,25 @@ window.onload = function() {
             onPressed: _handlePaymentCancelled,
           ),
         ),
-
-        // SAFE AREA FIX FOR iPHONE
         body: SafeArea(
           child: Stack(
             children: [
               // WEBVIEW
               if (!_hasError)
                 InAppWebView(
-                  initialData: InAppWebViewInitialData(
-                    data: _paymentHtml,
-                    baseUrl: WebUri('https://www.payfast.co.za/'),
-                    mimeType: 'text/html',
-                    encoding: 'UTF-8',
-                  ),
-
+                  initialUrlRequest: _hostedRequest,
                   initialSettings: InAppWebViewSettings(
                     javaScriptEnabled: true,
-                    domStorageEnabled: true,
-                    databaseEnabled: true,
-                    allowFileAccess: true,
                     thirdPartyCookiesEnabled: true,
-                    useHybridComposition: true,
-                    mixedContentMode:
-                        MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
-                    cacheMode: CacheMode.LOAD_NO_CACHE,
-                    // Key addition: enable Apple Pay API (iOS 13+)
+                    // Enables the Apple Pay API in WKWebView (iOS 13+)
                     applePayAPIEnabled: true,
                   ),
 
                   onWebViewCreated: (controller) {
                     _webViewController = controller;
-
-                    controller.addJavaScriptHandler(
-                      handlerName: 'onPaymentComplete',
-                      callback: (_) {
-                        _handlePaymentSuccess();
-                      },
-                    );
-
-                    controller.addJavaScriptHandler(
-                      handlerName: 'onPaymentCancelled',
-                      callback: (_) {
-                        _handlePaymentCancelled();
-                      },
-                    );
+                    // NOTE: no JavaScript handlers on purpose. With
+                    // applePayAPIEnabled the plugin's script injection is
+                    // limited. Results are detected via URL checks below.
                   },
 
                   onLoadStart: (controller, url) {
@@ -185,8 +123,7 @@ window.onload = function() {
                     return NavigationActionPolicy.ALLOW;
                   },
 
-                  onReceivedError:
-                      (controller, request, error) {
+                  onReceivedError: (controller, request, error) {
                     if (request.isForMainFrame == true) {
                       setState(() {
                         _isLoading = false;
@@ -210,11 +147,9 @@ window.onload = function() {
                         CircularProgressIndicator(
                           color: Colors.white,
                         ),
-
                         SizedBox(height: 16),
-
                         Text(
-                          'Processing payment...',
+                          'Loading secure payment...',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -241,12 +176,9 @@ window.onload = function() {
                             color: Colors.red,
                           ),
                         ),
-
                         const SizedBox(height: 24),
-
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ElevatedButton(
                               onPressed: () {
@@ -256,23 +188,18 @@ window.onload = function() {
                                   _resultHandled = false;
                                 });
 
-                                _webViewController?.loadData(
-                                  data: _paymentHtml,
-                                  baseUrl: WebUri(
-                                    'https://www.payfast.co.za/',
-                                  ),
-                                  mimeType: 'text/html',
-                                  encoding: 'UTF-8',
+                                // The InAppWebView is rebuilt when _hasError
+                                // flips back to false, and it loads
+                                // initialUrlRequest again by itself.
+                                _webViewController?.loadUrl(
+                                  urlRequest: _hostedRequest,
                                 );
                               },
                               child: const Text('Retry'),
                             ),
-
                             const SizedBox(width: 16),
-
                             OutlinedButton(
-                              onPressed:
-                                  _handlePaymentCancelled,
+                              onPressed: _handlePaymentCancelled,
                               child: const Text('Close'),
                             ),
                           ],
