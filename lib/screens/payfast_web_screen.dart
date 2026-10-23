@@ -113,6 +113,8 @@ window.onload = function() {
                     mixedContentMode:
                         MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
                     cacheMode: CacheMode.LOAD_NO_CACHE,
+                    // Key addition: enable Apple Pay API (iOS 13+)
+                    applePayAPIEnabled: true,
                   ),
 
                   onWebViewCreated: (controller) {
