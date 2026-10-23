@@ -41,22 +41,13 @@ class _ScanningScreenState extends State<ScanningScreen> {
   Future<void> _processStoreScan(String rawData) async {
     setState(() => _isLoading = true);
 
-    String storeId = rawData;
+    final String? storeId = _extractStoreId(rawData);
 
-    // Handle JSON format: {"storeId": "..."}
-    if (rawData.trim().startsWith('{')) {
-      try {
-        final json = jsonDecode(rawData);
-        if (json['storeId'] != null) {
-          storeId = json['storeId'];
-        } else {
-          _showInfoDialog();
-          return;
-        }
-      } catch (_) {
-        _showInfoDialog();
-        return;
-      }
+    if (storeId == null || storeId.isEmpty) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showInfoDialog();
+      return;
     }
 
     try {
@@ -65,6 +56,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
           .doc(storeId)
           .get();
 
+      if (!mounted) return;
       setState(() => _isLoading = false);
 
       if (doc.exists && doc.data() != null) {
@@ -76,9 +68,48 @@ class _ScanningScreenState extends State<ScanningScreen> {
         _showInfoDialog();
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       _showInfoDialog();
     }
+  }
+
+  /// Extracts the store ID from any supported QR payload:
+  ///   - URL:   https://tapzpay.web.app/?storeId=XXX&name=YYY   ← current format
+  ///   - JSON:  {"storeId": "XXX"}                              ← legacy
+  ///   - Raw:   "XXX"                                           ← legacy
+  ///
+  /// Returns null if the payload is not a valid store QR code.
+  String? _extractStoreId(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+
+    // 1. JSON QR codes:  {"storeId":"..."}
+    if (trimmed.startsWith('{')) {
+      try {
+        final json = jsonDecode(trimmed);
+        final id = json['storeId'];
+        if (id is String && id.isNotEmpty) return id;
+      } catch (_) {
+        // fall through
+      }
+      return null;
+    }
+
+    // 2. URL QR codes:  https://tapzpay.web.app/?storeId=...&name=...
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      try {
+        final uri = Uri.parse(trimmed);
+        final id = uri.queryParameters[Constants.storeId]; // 'storeId'
+        if (id != null && id.isNotEmpty) return id;
+      } catch (_) {
+        // fall through
+      }
+      return null;
+    }
+
+    // 3. Legacy raw store ID
+    return trimmed;
   }
 
   void _showScanResultDialog(Store store) {
